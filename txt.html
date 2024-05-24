@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Mobile</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #header {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+        #content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 100px);
+        }
+        #webcam {
+            border: 2px solid #000;
+            width: 100%;
+            max-width: 200px;
+            height: auto;
+            background-color: #ccc;
+        }
+        #roulette {
+            width: 200px; /* Adjust width as needed */
+            height: 200px; /* Adjust height as needed */
+            overflow: hidden;
+            position: relative;
+            margin-top: 20px;
+        }
+        #roulette img {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: spin 5s infinite linear;
+        }
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        #playButton {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Roleta da Sorte</h1>
+    </div>
+    <div id="content">
+        <video id="webcam" autoplay playsinline></video>
+        <div id="roulette">
+            <img src="rolete.gif" alt="Roulette">
+        </div>
+        <button id="playButton">Play</button>
+    </div>
+    <script>
+        // Função para obter o endereço IP do usuário
+        function getIP(callback) {
+            fetch('https://api64.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => callback(data.ip))
+                .catch(error => console.error('Error fetching IP:', error));
+        }
+        
+        // Webcam
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                var video = document.getElementById('webcam');
+                video.srcObject = stream;
+                video.onloadedmetadata = function(e) {
+                    video.play();
+                };
+            })
+            .catch(function(err) {
+                alert("An error occurred while accessing the webcam: " + err);
+                console.log("An error occurred: " + err);
+            });
+        } else {
+            alert("Sorry, your browser does not support accessing the webcam.");
+        }
+
+
+        // Verifica se já foi feito o spin hoje
+        function checkSpin() {
+            var lastSpin = localStorage.getItem('lastSpin');
+            var today = new Date().toLocaleDateString();
+            if (lastSpin === today) {
+                document.getElementById('playButton').disabled = true;
+                document.getElementById('playButton').innerText = 'Volte Amanhã';
+            }
+        }
+
+        // Registra o spin e desabilita o botão de play
+        function registerSpin() {
+            localStorage.setItem('lastSpin', new Date().toLocaleDateString());
+            document.getElementById('playButton').disabled = true;
+            document.getElementById('playButton').innerText = 'Volte Amanhã';
+        }
+
+        document.getElementById('playButton').addEventListener('click', function() {
+            getIP(function(ip) {
+                // Verifica se já foi feito o spin hoje para esse IP
+                if (localStorage.getItem(ip) === new Date().toLocaleDateString()) {
+                    alert('Voce ja girou a roleta hoje. Volte amanha.');
+                } else {
+                    // Registra o spin para esse IP
+                    localStorage.setItem(ip, new Date().toLocaleDateString());
+                    registerSpin();
+                    alert('Voce nao ganho continua amanha!');
+                }
+            });
+        });
+
+        // Verifica se já foi feito o spin hoje ao carregar a página
+        checkSpin();
+    </script>
+</body>
+</html>
